@@ -1,3 +1,6 @@
+import { useEffect } from "react";
+import { useCallback } from "react";
+import { useRef } from "react";
 import { useState } from "react";
 
 const itemHeight = 35; // Adjustable global variable
@@ -19,10 +22,37 @@ const ListItem = ({ index }) => {
   );
 };
 
+const useScrollTop = () => {
+  const [scrollTop, setScrollTop] = useState(0);
+  const scrollRef = useRef();
+  const animationFrame = useRef();
+
+  
+  useEffect(() => {
+    const onScroll = (e) => {
+      if (animationFrame.current) {
+        cancelAnimationFrame(animationFrame.current);
+      }
+      animationFrame.current = requestAnimationFrame(() => {
+        console.log(e.target.scrollTop);
+        setScrollTop(e.target.scrollTop);
+      });
+    };
+
+    const scrollContainer = scrollRef.current;
+
+    setScrollTop(scrollContainer.scrollTop);
+    scrollContainer.addEventListener("scroll", onScroll);
+    return () => scrollContainer.removeEventListener("scroll", onScroll);
+  }, []);
+
+  return [scrollTop, scrollRef];
+};
+
 const VirtualizedList = ({
   numberOfItems,
 }) => {
-  const [scrollTop, setScrollTop] = useState(0);
+  const [scrollTop, scrollRef] = useScrollTop();
 
   const startIndex = Math.floor(scrollTop / itemHeight);
 
@@ -49,9 +79,10 @@ const VirtualizedList = ({
     <ul
       className="overflow-y-scroll w-full h-[500px] border-2 border-black"
       style={{ height: `${windowHeight}px` }}
-      onScroll={(e) => {
-        setScrollTop(e.currentTarget.scrollTop);
-      }}
+      ref={scrollRef}
+      // onScroll={(e) => {
+      //   setScrollTop(e.currentTarget.scrollTop);
+      // }}
     >
       <div style={{
         height: `${totalHeight}px`
