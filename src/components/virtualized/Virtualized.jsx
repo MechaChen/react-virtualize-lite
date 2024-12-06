@@ -2,6 +2,7 @@ import { useState } from "react";
 
 const itemHeight = 35; // Adjustable global variable
 const windowHeight = 500;
+const preloadCount = 10;
 
 const ListItem = ({ index }) => {
   return (
@@ -22,14 +23,18 @@ const VirtualizedList = ({
   numberOfItems,
 }) => {
   const [scrollTop, setScrollTop] = useState(0);
+  
   const startIndex = Math.floor(scrollTop / itemHeight);
+  const preloadStartIndex = Math.max(0, startIndex - preloadCount);
+
   const endIndex = Math.floor((scrollTop + windowHeight) / itemHeight);
+  const preloadEndIndex = Math.min(numberOfItems, endIndex + preloadCount);
 
   const totalHeight = numberOfItems * itemHeight;
 
   const listItems = (() => {
     const items = [];
-    for (let i = startIndex; i <= endIndex; i++) {
+    for (let i = preloadStartIndex; i <= preloadEndIndex; i++) {
       items.push(<ListItem key={i} index={i} />);
     }
     return items;
