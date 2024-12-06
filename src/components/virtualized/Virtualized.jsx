@@ -44,7 +44,11 @@ const VirtualizedList = ({
         setScrollTop(e.currentTarget.scrollTop);
       }}
     >
-      {listItems}
+      <div style={{
+        height: `${totalHeight}px`
+      }}>
+        {listItems}
+      </div>
     </ul>
   );
 };
