@@ -12,7 +12,7 @@ const ListItem = ({ index }) => {
         top: `${itemHeight * index}px`,
         backgroundColor: index % 2 === 0 ? '#f0f0f0' : 'white'
       }}
-      className="text-center absolute w-full leading-9"
+      className="text-center w-full leading-9"
     >
       List Item Index - {index}
     </li>
@@ -23,19 +23,23 @@ const VirtualizedList = ({
   numberOfItems,
 }) => {
   const [scrollTop, setScrollTop] = useState(0);
-  
+
   const startIndex = Math.floor(scrollTop / itemHeight);
-  const preloadStartIndex = Math.max(0, startIndex - preloadCount);
 
-  const endIndex = Math.floor((scrollTop + windowHeight) / itemHeight);
-  const preloadEndIndex = Math.min(numberOfItems, endIndex + preloadCount);
+  // 從 startIndex 開始，原本會預設渲染 floor(500 / 35) + 2 * 10 = 14 + 20 = 34 個 item
+  // 但最後剩下只夠渲染不到 34 個 item 時，則只渲染剩下的 item，直到只剩 14 個 item
+  const renderedCount = Math.floor(windowHeight / itemHeight) + 2 * preloadCount;
+  const restItemsCount = numberOfItems - startIndex;
 
+  const preloadedRenderedCount = Math.min(restItemsCount, renderedCount);
+  
   const totalHeight = numberOfItems * itemHeight;
 
   const listItems = (() => {
     const items = [];
-    for (let i = preloadStartIndex; i <= preloadEndIndex; i++) {
-      items.push(<ListItem key={i} index={i} />);
+    for (let i = 0; i <= preloadedRenderedCount; i++) {
+      const index = startIndex + i;
+      items.push(<ListItem key={index} index={index} />);
     }
     return items;
   })();
@@ -43,7 +47,7 @@ const VirtualizedList = ({
 
   return (
     <ul
-      className="overflow-y-scroll w-full h-[500px] border-2 border-black relative"
+      className="overflow-y-scroll w-full h-[500px] border-2 border-black"
       style={{ height: `${windowHeight}px` }}
       onScroll={(e) => {
         setScrollTop(e.currentTarget.scrollTop);
@@ -52,7 +56,11 @@ const VirtualizedList = ({
       <div style={{
         height: `${totalHeight}px`
       }}>
-        {listItems}
+        <div style={{
+          transform: `translateY(${startIndex * itemHeight}px)`
+        }}>
+          {listItems}
+        </div>
       </div>
     </ul>
   );
